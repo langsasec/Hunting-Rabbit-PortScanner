@@ -2,6 +2,8 @@
 
 Hunting-Rabbit-PortScanner（猎兔端口扫描器）：一款快速，准确的主机存活检测和端口扫描工具。
 
+GO版本：https://github.com/langsasec/Hunting-Rabbit-PortScanner-Go
+
 ## Usage
 
 ```
