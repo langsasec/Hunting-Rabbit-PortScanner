@@ -40,5 +40,7 @@ python Hunting-Rabbit-PortScanner.py 192.168.0.0/24 -v -p 80
 ## help
 
 1.如果想提高准确率，可提高超时时间，eg:-t=1。
+
 2.主机存活非ping检测，禁ping也会检测到存活。
+
 3.不检测手机，不在渗透测试范围。
