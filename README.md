@@ -23,7 +23,7 @@ options:
   -v, --verbose         Verbose output
 ```
 
-## eg
+## e.g.
 
 扫描单个主机：
 
