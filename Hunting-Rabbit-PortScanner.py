@@ -6,9 +6,11 @@ import concurrent.futures
 import ipaddress
 
 
-def check_host_alive(host, port, timeout):
+def check_host_alive(host, port, timeout,verbose=False):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(timeout)
+    if verbose:
+        print('[+] Scanning', host, port)
     try:
         sock.connect((host, port))
         sock.close()
@@ -17,8 +19,8 @@ def check_host_alive(host, port, timeout):
         return False
 
 
-def scan_port(host, port, timeout, results):
-    if check_host_alive(host, port, timeout):
+def scan_port(host, port, timeout, results,verbose=False):
+    if check_host_alive(host, port, timeout,verbose):
         results.append(port)
 
 
@@ -27,7 +29,7 @@ def scan_host(host, port_range, timeout, results, verbose=False):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for port in parse_ports(port_range):
-            futures.append(executor.submit(scan_port, host, port, timeout, open_ports))
+            futures.append(executor.submit(scan_port, host, port, timeout, open_ports,verbose))
         concurrent.futures.wait(futures)
     if open_ports:
         if verbose:
@@ -39,8 +41,7 @@ def scan_host(host, port_range, timeout, results, verbose=False):
             print(f'{host} is not alive')
 
 
-
-def scan_network(network, port_range, timeout, max_workers=32, verbose=False):
+def scan_network(network, port_range, timeout, max_workers=1000, verbose=False):
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
@@ -90,8 +91,14 @@ elapsed_time = end_time - start_time
 
 if results:
     print(f'[+] Found open ports on {len(results)} host(s):')
-    for host, open_ports in results:
-        print(f'    {host}: {", ".join(map(str, open_ports))}')
+
+    with open(f'{network.replace("/","_")}.txt', 'w') as f:
+        for host,port in results:
+            for port in port:
+                f.write(f'{host}:{port}\n')
+                print(f'{host}:{port}')
+
+    print(f'[+] Open ports saved to {network.replace("/","_")}.txt')
 else:
     print('[-] No open ports found on any host.')
 
