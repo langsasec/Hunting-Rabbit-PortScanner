@@ -1,5 +1,7 @@
 import argparse
+import signal
 import socket
+import sys
 import time
 
 import concurrent.futures
@@ -11,6 +13,7 @@ def check_host_alive(host, port, timeout,verbose=False):
     sock.settimeout(timeout)
     if verbose:
         print('[+] Scanning', host, port)
+
     try:
         sock.connect((host, port))
         sock.close()
@@ -30,6 +33,12 @@ def scan_host(host, port_range, timeout, results, verbose=False):
         futures = []
         for port in parse_ports(port_range):
             futures.append(executor.submit(scan_port, host, port, timeout, open_ports,verbose))
+            try:
+                signal.signal(signal.SIGINT, signal_handler)
+                # 捕捉异常
+            except KeyboardInterrupt:
+                print('程序已退出!')
+                sys.exit(0)
         concurrent.futures.wait(futures)
     if open_ports:
         if verbose:
@@ -38,8 +47,10 @@ def scan_host(host, port_range, timeout, results, verbose=False):
         results.append((host, open_ports))
     else:
         if verbose:
-            print(f'{host} is not alive')
+            print(f'{host} does not have open port')
 
+def signal_handler(sig, frame):
+    sys.exit(0)
 
 def scan_network(network, port_range, timeout, max_workers=1000, verbose=False):
     results = []
@@ -47,6 +58,12 @@ def scan_network(network, port_range, timeout, max_workers=1000, verbose=False):
         futures = []
         for host in ipaddress.IPv4Network(network):
             futures.append(executor.submit(scan_host, str(host), port_range, timeout, results, verbose=verbose))
+            try:
+                signal.signal(signal.SIGINT, signal_handler)
+                # 捕捉异常
+            except KeyboardInterrupt:
+                print('程序已退出!')
+                sys.exit(0)
         concurrent.futures.wait(futures)
     return results
 
@@ -85,7 +102,6 @@ start_time = time.time()
 print(f'[*] Scanning network {network} ({port_range})...')
 
 results = scan_network(network, port_range, timeout, max_workers=max_workers, verbose=args.verbose)
-
 end_time = time.time()
 elapsed_time = end_time - start_time
 
